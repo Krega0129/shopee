@@ -1,0 +1,14 @@
+services:
+  api:
+    build:
+      context: .
+      target: api
+    volumes: ["shopee-data:/app/apps/api/prisma"]
+  web:
+    build:
+      context: .
+      target: web
+    ports: ["8080:80"]
+    depends_on: [api]
+volumes:
+  shopee-data:

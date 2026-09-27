@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id Int @id @default(autoincrement())
+  name String
+  sku String @unique
+  category String?
+  referenceProductCost Decimal @default(0)
+  referencePackagingCost Decimal @default(0)
+  notes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  batches InventoryBatch[]
+  orders SaleOrder[]
+  mappings SiteProductMapping[]
+}
+
+model Site {
+  id Int @id @default(autoincrement())
+  name String
+  shop String
+  currency String
+  exchangeRate Decimal
+  platformFeeRate Decimal @default(0)
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders SaleOrder[]
+  mappings SiteProductMapping[]
+  ads AdExpense[]
+  withdrawals Withdrawal[]
+}
+
+model SiteProductMapping {
+  id Int @id @default(autoincrement())
+  siteId Int
+  productId Int
+  externalName String
+  variationName String?
+  site Site @relation(fields:[siteId], references:[id], onDelete:Cascade)
+  product Product @relation(fields:[productId], references:[id], onDelete:Cascade)
+  @@unique([siteId, externalName, variationName])
+}
+
+model Purchase {
+  id Int @id @default(autoincrement())
+  purchaseDate DateTime
+  purchaseOrderNo String
+  supplier String
+  notes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  batches InventoryBatch[]
+}
+
+model InventoryBatch {
+  id Int @id @default(autoincrement())
+  purchaseId Int
+  productId Int
+  specification String?
+  quantity Int
+  remainingQuantity Int
+  productUnitCost Decimal
+  packagingUnitCost Decimal
+  createdAt DateTime @default(now())
+  purchase Purchase @relation(fields:[purchaseId], references:[id], onDelete:Cascade)
+  product Product @relation(fields:[productId], references:[id], onDelete:Restrict)
+  allocations InventoryAllocation[]
+  @@index([productId])
+}
+
+model SaleOrder {
+  id Int @id @default(autoincrement())
+  saleDate DateTime
+  orderNo String
+  lineNo Int @default(1)
+  siteId Int
+  productId Int
+  quantity Int
+  currencySnapshot String
+  exchangeRateSnapshot Decimal
+  platformFeeRateSnapshot Decimal
+  originalAmount Decimal
+  cnyAmount Decimal
+  goodsCost Decimal @default(0)
+  packagingCost Decimal @default(0)
+  comprehensiveCost Decimal @default(0)
+  otherFees Decimal @default(0)
+  orderCost Decimal @default(0)
+  grossProfit Decimal @default(0)
+  grossMargin Decimal?
+  notes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  site Site @relation(fields:[siteId], references:[id], onDelete:Restrict)
+  product Product @relation(fields:[productId], references:[id], onDelete:Restrict)
+  allocations InventoryAllocation[]
+  @@unique([orderNo, lineNo])
+  @@index([productId])
+}
+
+model InventoryAllocation {
+  id Int @id @default(autoincrement())
+  saleOrderId Int
+  batchId Int
+  quantity Int
+  productUnitCostSnapshot Decimal
+  packagingUnitCostSnapshot Decimal
+  totalCost Decimal
+  saleOrder SaleOrder @relation(fields:[saleOrderId], references:[id], onDelete:Cascade)
+  batch InventoryBatch @relation(fields:[batchId], references:[id], onDelete:Restrict)
+}
+
+model AdExpense {
+  id Int @id @default(autoincrement())
+  expenseDate DateTime
+  siteId Int
+  amount Decimal
+  channel String?
+  notes String?
+  createdAt DateTime @default(now())
+  site Site @relation(fields:[siteId], references:[id], onDelete:Restrict)
+}
+
+model Withdrawal {
+  id Int @id @default(autoincrement())
+  withdrawalDate DateTime
+  siteId Int
+  amount Decimal
+  fee Decimal @default(0)
+  notes String?
+  createdAt DateTime @default(now())
+  site Site @relation(fields:[siteId], references:[id], onDelete:Restrict)
+}

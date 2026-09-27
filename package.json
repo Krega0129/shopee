@@ -1,0 +1,1 @@
+{"name":"shopee-ledger","private":true,"packageManager":"pnpm@11.19.0","scripts":{"dev":"pnpm -r --parallel dev","build":"pnpm -r build","test":"pnpm --filter @shopee/api test","db:push":"pnpm --filter @shopee/api prisma db push","db:seed":"pnpm --filter @shopee/api prisma db seed"},"devDependencies":{"typescript":"^5.9.2"}}
